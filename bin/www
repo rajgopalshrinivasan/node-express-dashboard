@@ -8,7 +8,7 @@ const app = require("../app");
 const debug = require("debug")("log-dashboard:server");
 const http = require("http");
 const  WebSocket = require("ws");
-
+const fs = require("fs");
 
 
 /**
@@ -31,8 +31,15 @@ const wss= new WebSocket.Server({server });
 server.listen(port);
 server.on("error", onError);
 wss.on("connection", ws => {
-  ws.on("message", message  => {
-    ws.send(`Hello from the server! You sent: ${message}`);
+  ws.on("message", filePath  => {
+    fs.watch(filePath , () => {
+      fs.createReadStream(filePath).on("data", chunk => {
+        const logsArr= chunk.toString().split("\n");
+        const logsStr =logsArr.reverse().join("\n");
+        ws.send(logsStr);
+      });
+    });
+ 
   });
 });
 server.on("listening", onListening);
